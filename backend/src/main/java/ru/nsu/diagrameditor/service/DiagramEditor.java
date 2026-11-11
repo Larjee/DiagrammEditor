@@ -1,8 +1,10 @@
 package ru.nsu.diagrameditor.service;
 
 import org.springframework.stereotype.Service;
+import ru.nsu.diagrameditor.model.Block;
 import ru.nsu.diagrameditor.model.ComponentSet;
 import ru.nsu.diagrameditor.model.Diagram;
+import ru.nsu.diagrameditor.model.EditMode;
 import ru.nsu.diagrameditor.model.Schema;
 import ru.nsu.diagrameditor.repository.ResourceRepository;
 
@@ -10,10 +12,12 @@ import ru.nsu.diagrameditor.repository.ResourceRepository;
 public class DiagramEditor {
 
     private final ResourceRepository resources;
+    private final SchemaValidator validator;
     private Diagram diagram;
 
-    public DiagramEditor(ResourceRepository resources) {
+    public DiagramEditor(ResourceRepository resources, SchemaValidator validator) {
         this.resources = resources;
+        this.validator = validator;
     }
 
     public Diagram createDiagram(String componentSetName, String schemaName) {
@@ -31,7 +35,25 @@ public class DiagramEditor {
         return diagram;
     }
 
+    public Block addBlock(String blockType, double x, double y) {
+        Diagram diagram = requireDiagram();
+        if (diagram.getMode() == EditMode.STRICT && !validator.canAddBlock(diagram, blockType)) {
+            throw new SchemaViolationException(
+                    "Block '" + blockType + "' is not permitted by schema '" + diagram.getSchema().getName() + "'");
+        }
+        Block block = new Block(blockType, x, y, diagram.getComponentSet().getDefaultStyle(blockType));
+        diagram.addComponent(block);
+        return block;
+    }
+
     public Diagram getDiagram() {
+        return diagram;
+    }
+
+    private Diagram requireDiagram() {
+        if (diagram == null) {
+            throw new IllegalStateException("No diagram is open for editing");
+        }
         return diagram;
     }
 }
