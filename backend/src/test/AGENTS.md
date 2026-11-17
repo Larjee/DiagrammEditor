@@ -24,6 +24,7 @@ backend/src/test/
 - File `resources/features/ucN_<action>.feature`; first line `# language: ru`, then `Функция: UC-N <name from the doc>`.
 - One `Сценарий` per flow: the main flow, every alternative flow the backend handles, free mode where strict mode refuses something. Alternative flows start with the doc's id: `Сценарий: A2. ...`.
 - Steps are plain Russian sentences with `Дано` / `Когда` / `Тогда` / `И`; parameters are quoted strings (`"uml-class"`) or numbers.
+- Blocks get a name in the scenario (`на диаграмме блок "class" под именем "Заказ"`); steps map names to the ids returned by the API. An unknown name is sent as is, which is how a scenario refers to a missing component.
 - Reuse existing phrases from `DiagramSteps` before adding new ones; keep the wording identical so one step definition serves every feature.
 - A refused action is checked by its HTTP status: `Тогда редактор отказывает с ошибкой 422`. After a refusal, also check that the diagram did not change.
 

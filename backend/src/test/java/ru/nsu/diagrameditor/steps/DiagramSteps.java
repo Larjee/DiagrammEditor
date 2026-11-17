@@ -14,11 +14,15 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import ru.nsu.diagrameditor.api.BlockController.AddBlockRequest;
+import ru.nsu.diagrameditor.api.ConnectorController.AddConnectorRequest;
 import ru.nsu.diagrameditor.api.DiagramController.CreateDiagramRequest;
+import ru.nsu.diagrameditor.api.PortRef;
 import ru.nsu.diagrameditor.service.DiagramEditor;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,6 +41,7 @@ public class DiagramSteps {
     @Autowired
     private DiagramEditor editor;
 
+    private final Map<String, String> ids = new HashMap<>();
     private MockHttpServletResponse response;
 
     @Before
@@ -55,6 +60,13 @@ public class DiagramSteps {
         diagramIsOpen(componentSet, null);
     }
 
+    @Дано("на диаграмме блок {string} под именем {string}")
+    public void blockIsAdded(String blockType, String name) throws Exception {
+        userAddsBlock(blockType, 0, 0);
+        assertEquals(201, response.getStatus());
+        ids.put(name, JsonPath.read(body(response), "$.id"));
+    }
+
     @Когда("пользователь создаёт диаграмму с набором {string} и схемой {string}")
     public void userCreatesDiagram(String componentSet, String schema) throws Exception {
         send(post("/api/diagram"), new CreateDiagramRequest(componentSet, schema));
@@ -68,6 +80,12 @@ public class DiagramSteps {
     @Когда("пользователь добавляет блок {string} в точку {int}, {int}")
     public void userAddsBlock(String blockType, int x, int y) throws Exception {
         send(post("/api/diagram/blocks"), new AddBlockRequest(blockType, x, y));
+    }
+
+    @Когда("пользователь соединяет {string} и {string} коннектором {string}")
+    public void userConnects(String source, String target, String connectorType) throws Exception {
+        send(post("/api/diagram/connectors"), new AddConnectorRequest(connectorType,
+                new PortRef(id(source), "RIGHT", 0.5), new PortRef(id(target), "LEFT", 0.5)));
     }
 
     @Тогда("диаграмма открыта в строгом режиме")
@@ -87,8 +105,21 @@ public class DiagramSteps {
 
     @Тогда("на диаграмме нет компонентов")
     public void diagramIsEmpty() throws Exception {
-        List<Object> blocks = diagram().read("$.blocks");
-        assertTrue(blocks.isEmpty());
+        DocumentContext diagram = diagram();
+        assertTrue(diagram.read("$.blocks", List.class).isEmpty());
+        assertTrue(diagram.read("$.connectors", List.class).isEmpty());
+    }
+
+    @Тогда("на диаграмме нет коннекторов")
+    public void diagramHasNoConnectors() throws Exception {
+        assertTrue(diagram().read("$.connectors", List.class).isEmpty());
+    }
+
+    @Тогда("на диаграмме коннектор {string} от {string} к {string}")
+    public void diagramHasConnector(String connectorType, String source, String target) throws Exception {
+        List<Object> found = diagram().read("$.connectors[?(@.type == '" + connectorType + "' && @.source.blockId == '"
+                + id(source) + "' && @.target.blockId == '" + id(target) + "')]");
+        assertEquals(1, found.size());
     }
 
     @Тогда("на диаграмме один блок {string} в точке {int}, {int}")
@@ -109,6 +140,10 @@ public class DiagramSteps {
     private void send(MockHttpServletRequestBuilder request, Object body) throws Exception {
         response = mvc.perform(request.contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body)))
                 .andReturn().getResponse();
+    }
+
+    private String id(String name) {
+        return ids.getOrDefault(name, name);
     }
 
     private DocumentContext diagram() throws Exception {
