@@ -2,9 +2,9 @@ package ru.nsu.diagrameditor.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.nsu.diagrameditor.TestEditors;
 import ru.nsu.diagrameditor.model.Diagram;
 import ru.nsu.diagrameditor.model.EditMode;
-import ru.nsu.diagrameditor.repository.InMemoryResourceRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -18,7 +18,7 @@ class CreateDiagramTest {
 
     @BeforeEach
     void setUp() {
-        editor = new DiagramEditor(new InMemoryResourceRepository(), new SchemaValidator());
+        editor = TestEditors.create();
     }
 
     @Test
