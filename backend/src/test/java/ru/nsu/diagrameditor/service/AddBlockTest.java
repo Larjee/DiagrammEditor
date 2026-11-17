@@ -2,8 +2,8 @@ package ru.nsu.diagrameditor.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.nsu.diagrameditor.TestEditors;
 import ru.nsu.diagrameditor.model.Block;
-import ru.nsu.diagrameditor.repository.InMemoryResourceRepository;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ class AddBlockTest {
 
     @BeforeEach
     void setUp() {
-        editor = new DiagramEditor(new InMemoryResourceRepository(), new SchemaValidator());
+        editor = TestEditors.create();
     }
 
     @Test
