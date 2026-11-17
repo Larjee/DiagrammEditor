@@ -3,7 +3,9 @@ package ru.nsu.diagrameditor.repository;
 import org.springframework.stereotype.Repository;
 import ru.nsu.diagrameditor.model.ComponentSet;
 import ru.nsu.diagrameditor.model.ConnectionRule;
+import ru.nsu.diagrameditor.model.LineType;
 import ru.nsu.diagrameditor.model.Schema;
+import ru.nsu.diagrameditor.model.Style;
 
 import java.awt.Dimension;
 import java.util.List;
@@ -12,6 +14,13 @@ import java.util.Optional;
 
 @Repository
 public class InMemoryResourceRepository implements ResourceRepository {
+
+    private static final Style DASHED_STYLE = new Style(
+            ComponentSet.DEFAULT_STYLE.borderColor(),
+            ComponentSet.DEFAULT_STYLE.borderWidth(),
+            ComponentSet.DEFAULT_STYLE.backgroundColor(),
+            ComponentSet.DEFAULT_STYLE.font(),
+            LineType.DASHED);
 
     private final List<ComponentSet> componentSets = List.of(
             new ComponentSet("uml-class",
@@ -37,7 +46,7 @@ public class InMemoryResourceRepository implements ResourceRepository {
                     Map.of("class", new Dimension(600, 400),
                             "interface", new Dimension(600, 400),
                             "enum", new Dimension(400, 300)),
-                    Map.of()),
+                    Map.of("interface", List.of(ComponentSet.DEFAULT_STYLE, DASHED_STYLE))),
             new Schema("flowchart",
                     List.of("start", "end", "process", "decision", "input-output"),
                     List.of("flow"),

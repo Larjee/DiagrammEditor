@@ -9,6 +9,7 @@ import ru.nsu.diagrameditor.model.Diagram;
 import ru.nsu.diagrameditor.model.EditMode;
 import ru.nsu.diagrameditor.model.Port;
 import ru.nsu.diagrameditor.model.Schema;
+import ru.nsu.diagrameditor.model.Style;
 import ru.nsu.diagrameditor.repository.ResourceRepository;
 
 import java.util.List;
@@ -92,6 +93,17 @@ public class DiagramEditor {
         }
         block.resize(width, height);
         return block;
+    }
+
+    public Component changeStyle(String componentId, Style style) {
+        Diagram diagram = getDiagram();
+        Component component = getComponent(componentId);
+        if (diagram.getMode() == EditMode.STRICT && !validator.canApplyStyle(diagram, component, style)) {
+            throw new SchemaViolationException("Style is not available for '" + component.getType()
+                    + "' in schema '" + diagram.getSchema().getName() + "'");
+        }
+        component.setStyle(style);
+        return component;
     }
 
     public Diagram getDiagram() {
