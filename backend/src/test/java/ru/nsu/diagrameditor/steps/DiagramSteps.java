@@ -14,6 +14,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import ru.nsu.diagrameditor.api.BlockController.AddBlockRequest;
+import ru.nsu.diagrameditor.api.ComponentController.ResizeRequest;
 import ru.nsu.diagrameditor.api.ConnectorController.AddConnectorRequest;
 import ru.nsu.diagrameditor.api.DiagramController.CreateDiagramRequest;
 import ru.nsu.diagrameditor.api.PortRef;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 public class DiagramSteps {
 
@@ -67,6 +69,13 @@ public class DiagramSteps {
         ids.put(name, JsonPath.read(body(response), "$.id"));
     }
 
+    @Дано("{string} и {string} соединены коннектором {string} под именем {string}")
+    public void blocksAreConnected(String source, String target, String connectorType, String name) throws Exception {
+        userConnects(source, target, connectorType);
+        assertEquals(201, response.getStatus());
+        ids.put(name, JsonPath.read(body(response), "$.id"));
+    }
+
     @Когда("пользователь создаёт диаграмму с набором {string} и схемой {string}")
     public void userCreatesDiagram(String componentSet, String schema) throws Exception {
         send(post("/api/diagram"), new CreateDiagramRequest(componentSet, schema));
@@ -86,6 +95,11 @@ public class DiagramSteps {
     public void userConnects(String source, String target, String connectorType) throws Exception {
         send(post("/api/diagram/connectors"), new AddConnectorRequest(connectorType,
                 new PortRef(id(source), "RIGHT", 0.5), new PortRef(id(target), "LEFT", 0.5)));
+    }
+
+    @Когда("пользователь задаёт компоненту {string} размер {int} на {int}")
+    public void userResizes(String name, int width, int height) throws Exception {
+        send(put("/api/diagram/components/{id}/size", id(name)), new ResizeRequest(width, height));
     }
 
     @Тогда("диаграмма открыта в строгом режиме")
@@ -131,6 +145,13 @@ public class DiagramSteps {
         assertEquals(y, number(diagram, "$.blocks[0].y"));
     }
 
+    @Тогда("размер блока {string} равен {int} на {int}")
+    public void blockHasSize(String name, int width, int height) throws Exception {
+        Map<String, Object> block = block(name);
+        assertEquals(width, ((Number) block.get("width")).doubleValue());
+        assertEquals(height, ((Number) block.get("height")).doubleValue());
+    }
+
     @Тогда("редактор отказывает с ошибкой {int}")
     public void editorRejects(int status) throws Exception {
         assertEquals(status, response.getStatus());
@@ -144,6 +165,12 @@ public class DiagramSteps {
 
     private String id(String name) {
         return ids.getOrDefault(name, name);
+    }
+
+    private Map<String, Object> block(String name) throws Exception {
+        List<Map<String, Object>> found = diagram().read("$.blocks[?(@.id == '" + id(name) + "')]");
+        assertEquals(1, found.size());
+        return found.get(0);
     }
 
     private DocumentContext diagram() throws Exception {
