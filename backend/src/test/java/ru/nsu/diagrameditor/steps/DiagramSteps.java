@@ -18,6 +18,7 @@ import ru.nsu.diagrameditor.api.ComponentController.ResizeRequest;
 import ru.nsu.diagrameditor.api.ConnectorController.AddConnectorRequest;
 import ru.nsu.diagrameditor.api.DiagramController.CreateDiagramRequest;
 import ru.nsu.diagrameditor.api.DiagramController.SelectComponentSetRequest;
+import ru.nsu.diagrameditor.api.DiagramController.SelectSchemaRequest;
 import ru.nsu.diagrameditor.api.Point;
 import ru.nsu.diagrameditor.api.PortRef;
 import ru.nsu.diagrameditor.service.DiagramEditor;
@@ -155,6 +156,16 @@ public class DiagramSteps {
         send(put("/api/diagram/component-set"), new SelectComponentSetRequest(componentSet));
     }
 
+    @Когда("пользователь выбирает схему {string}")
+    public void userSelectsSchema(String schema) throws Exception {
+        send(put("/api/diagram/schema"), new SelectSchemaRequest(schema));
+    }
+
+    @Когда("пользователь отключает схему")
+    public void userRemovesSchema() throws Exception {
+        userSelectsSchema(null);
+    }
+
     @Тогда("диаграмма открыта в строгом режиме")
     public void diagramIsStrict() throws Exception {
         assertEquals("STRICT", diagram().read("$.mode"));
@@ -240,6 +251,11 @@ public class DiagramSteps {
     @Тогда("активен набор компонентов {string}")
     public void componentSetIsActive(String componentSet) throws Exception {
         assertEquals(componentSet, diagram().read("$.componentSet"));
+    }
+
+    @Тогда("активна схема {string}")
+    public void schemaIsActive(String schema) throws Exception {
+        assertEquals(schema, diagram().read("$.schema"));
     }
 
     @Тогда("в палитре есть блок {string}")
