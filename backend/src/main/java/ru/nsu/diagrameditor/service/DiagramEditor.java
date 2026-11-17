@@ -69,7 +69,7 @@ public class DiagramEditor {
                 && !validator.canConnect(diagram, connectorType, sourcePort, targetPort)) {
             throw new SchemaViolationException("Connector '" + connectorType + "' from '"
                     + sourcePort.getOwner().getType() + "' to '" + targetPort.getOwner().getType()
-                    + "' is not permitted by schema '" + diagram.getSchema().getName() + "'");
+                    + "' violates schema '" + diagram.getSchema().getName() + "'");
         }
         Connector connector = new Connector(connectorType, diagram.getComponentSet().getDefaultStyle(connectorType));
         addPortIfNew(sourcePort);
