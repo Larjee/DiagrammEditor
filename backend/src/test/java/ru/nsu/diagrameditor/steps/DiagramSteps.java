@@ -34,6 +34,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 public class DiagramSteps {
 
+    private static final Map<String, String> LINE_TYPES = Map.of(
+            "сплошная", "SOLID",
+            "пунктирная", "DASHED",
+            "точечная", "DOTTED");
+
     @Autowired
     private MockMvc mvc;
 
@@ -102,6 +107,16 @@ public class DiagramSteps {
         send(put("/api/diagram/components/{id}/size", id(name)), new ResizeRequest(width, height));
     }
 
+    @Когда("пользователь меняет у {string} цвет фона на {string}")
+    public void userChangesBackground(String name, String color) throws Exception {
+        changeStyle(name, "backgroundColor", color);
+    }
+
+    @Когда("пользователь меняет у {string} тип линии на {string}")
+    public void userChangesLineType(String name, String lineType) throws Exception {
+        changeStyle(name, "lineType", LINE_TYPES.getOrDefault(lineType, lineType));
+    }
+
     @Тогда("диаграмма открыта в строгом режиме")
     public void diagramIsStrict() throws Exception {
         assertEquals("STRICT", diagram().read("$.mode"));
@@ -152,6 +167,16 @@ public class DiagramSteps {
         assertEquals(height, ((Number) block.get("height")).doubleValue());
     }
 
+    @Тогда("у {string} цвет фона {string}")
+    public void componentHasBackground(String name, String color) throws Exception {
+        assertEquals(color, style(name).get("backgroundColor"));
+    }
+
+    @Тогда("у {string} тип линии {string}")
+    public void componentHasLineType(String name, String lineType) throws Exception {
+        assertEquals(LINE_TYPES.getOrDefault(lineType, lineType), style(name).get("lineType"));
+    }
+
     @Тогда("редактор отказывает с ошибкой {int}")
     public void editorRejects(int status) throws Exception {
         assertEquals(status, response.getStatus());
@@ -165,6 +190,18 @@ public class DiagramSteps {
 
     private String id(String name) {
         return ids.getOrDefault(name, name);
+    }
+
+    private void changeStyle(String name, String property, Object value) throws Exception {
+        Map<String, Object> style = new HashMap<>(style(name));
+        style.put(property, value);
+        send(put("/api/diagram/components/{id}/style", id(name)), style);
+    }
+
+    private Map<String, Object> style(String name) throws Exception {
+        List<Map<String, Object>> found = diagram().read("$..[?(@.id == '" + id(name) + "')].style");
+        assertEquals(1, found.size());
+        return found.get(0);
     }
 
     private Map<String, Object> block(String name) throws Exception {

@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ComponentSet {
 
-    private static final Style DEFAULT_STYLE = new Style(
+    public static final Style DEFAULT_STYLE = new Style(
             Color.BLACK, 1, Color.WHITE, new Font(Font.SANS_SERIF, Font.PLAIN, 12), LineType.SOLID);
 
     private final String name;
