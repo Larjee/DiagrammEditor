@@ -5,6 +5,7 @@ import ru.nsu.diagrameditor.model.ComponentSet;
 import ru.nsu.diagrameditor.model.ConnectionRule;
 import ru.nsu.diagrameditor.model.Schema;
 
+import java.awt.Dimension;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +34,9 @@ public class InMemoryResourceRepository implements ResourceRepository {
                             new ConnectionRule("association", "class", "class"),
                             new ConnectionRule("dependency", "class", "class"),
                             new ConnectionRule("dependency", "class", "interface")),
-                    Map.of(),
+                    Map.of("class", new Dimension(600, 400),
+                            "interface", new Dimension(600, 400),
+                            "enum", new Dimension(400, 300)),
                     Map.of()),
             new Schema("flowchart",
                     List.of("start", "end", "process", "decision", "input-output"),
@@ -47,7 +50,11 @@ public class InMemoryResourceRepository implements ResourceRepository {
                             new ConnectionRule("flow", "process", "input-output"),
                             new ConnectionRule("flow", "input-output", "process"),
                             new ConnectionRule("flow", "process", "end")),
-                    Map.of(),
+                    Map.of("start", new Dimension(200, 100),
+                            "end", new Dimension(200, 100),
+                            "process", new Dimension(400, 200),
+                            "decision", new Dimension(300, 300),
+                            "input-output", new Dimension(400, 200)),
                     Map.of())
     );
 
