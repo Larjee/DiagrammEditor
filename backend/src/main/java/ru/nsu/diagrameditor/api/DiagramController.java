@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.nsu.diagrameditor.model.Block;
 import ru.nsu.diagrameditor.model.ComponentSet;
 import ru.nsu.diagrameditor.model.Diagram;
 import ru.nsu.diagrameditor.model.EditMode;
@@ -38,6 +39,11 @@ public class DiagramController {
         return resources.getSchemas().stream().map(Schema::getName).toList();
     }
 
+    @GetMapping("/diagram")
+    public DiagramResponse getDiagram() {
+        return DiagramResponse.from(editor.getDiagram());
+    }
+
     @PostMapping("/diagram")
     @ResponseStatus(HttpStatus.CREATED)
     public DiagramResponse createDiagram(@RequestBody CreateDiagramRequest request) {
@@ -53,13 +59,18 @@ public class DiagramController {
             String schema,
             EditMode mode,
             List<String> blockTypes,
-            List<String> connectorTypes
+            List<String> connectorTypes,
+            List<BlockResponse> blocks
     ) {
         static DiagramResponse from(Diagram diagram) {
             ComponentSet set = diagram.getComponentSet();
             String schema = diagram.getSchema() == null ? null : diagram.getSchema().getName();
+            List<BlockResponse> blocks = diagram.getComponents().stream()
+                    .filter(Block.class::isInstance)
+                    .map(component -> BlockResponse.from((Block) component))
+                    .toList();
             return new DiagramResponse(set.getName(), schema, diagram.getMode(),
-                    set.getBlockTypes(), set.getConnectorTypes());
+                    set.getBlockTypes(), set.getConnectorTypes(), blocks);
         }
     }
 }

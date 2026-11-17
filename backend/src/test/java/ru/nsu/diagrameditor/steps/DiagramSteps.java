@@ -9,12 +9,13 @@ import ru.nsu.diagrameditor.model.Component;
 import ru.nsu.diagrameditor.model.EditMode;
 import ru.nsu.diagrameditor.service.DiagramEditor;
 import ru.nsu.diagrameditor.service.EditorException;
+import ru.nsu.diagrameditor.service.NoOpenDiagramException;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DiagramSteps {
@@ -59,7 +60,7 @@ public class DiagramSteps {
 
     @Тогда("диаграмма не открыта")
     public void noDiagramIsOpen() {
-        assertNull(editor.getDiagram());
+        assertThrows(NoOpenDiagramException.class, editor::getDiagram);
     }
 
     @Тогда("на диаграмме нет компонентов")

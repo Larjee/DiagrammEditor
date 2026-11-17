@@ -36,7 +36,7 @@ public class DiagramEditor {
     }
 
     public Block addBlock(String blockType, double x, double y) {
-        Diagram diagram = requireDiagram();
+        Diagram diagram = getDiagram();
         if (diagram.getMode() == EditMode.STRICT && !validator.canAddBlock(diagram, blockType)) {
             throw new SchemaViolationException(
                     "Block '" + blockType + "' is not permitted by schema '" + diagram.getSchema().getName() + "'");
@@ -47,10 +47,6 @@ public class DiagramEditor {
     }
 
     public Diagram getDiagram() {
-        return diagram;
-    }
-
-    private Diagram requireDiagram() {
         if (diagram == null) {
             throw new NoOpenDiagramException();
         }
