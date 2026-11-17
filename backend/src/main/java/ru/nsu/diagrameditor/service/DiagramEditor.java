@@ -7,6 +7,7 @@ import ru.nsu.diagrameditor.model.ComponentSet;
 import ru.nsu.diagrameditor.model.Connector;
 import ru.nsu.diagrameditor.model.Diagram;
 import ru.nsu.diagrameditor.model.EditMode;
+import ru.nsu.diagrameditor.model.InflectionPoint;
 import ru.nsu.diagrameditor.model.Port;
 import ru.nsu.diagrameditor.model.Schema;
 import ru.nsu.diagrameditor.model.Style;
@@ -79,6 +80,22 @@ public class DiagramEditor {
         return connector;
     }
 
+    public Connector addInflectionPoint(String connectorId, double x, double y) {
+        Connector connector = getConnector(connectorId);
+        connector.getInflectionPoints().add(new InflectionPoint(x, y));
+        return connector;
+    }
+
+    public Connector moveInflectionPoint(String connectorId, int index, double x, double y) {
+        Connector connector = getConnector(connectorId);
+        List<InflectionPoint> points = connector.getInflectionPoints();
+        if (index < 0 || index >= points.size()) {
+            throw new ResourceNotFoundException("Inflection point " + index + " not found");
+        }
+        connector.moveInflectionPoint(points.get(index), x, y);
+        return connector;
+    }
+
     public Block resizeComponent(String componentId, double width, double height) {
         Diagram diagram = getDiagram();
         if (!(getComponent(componentId) instanceof Block block)) {
@@ -125,6 +142,13 @@ public class DiagramEditor {
             return block;
         }
         throw new InvalidRequestException("Component '" + id + "' is not a block");
+    }
+
+    private Connector getConnector(String id) {
+        if (getComponent(id) instanceof Connector connector) {
+            return connector;
+        }
+        throw new InvalidRequestException("Component '" + id + "' is not a connector");
     }
 
     private static void addPortIfNew(Port port) {
