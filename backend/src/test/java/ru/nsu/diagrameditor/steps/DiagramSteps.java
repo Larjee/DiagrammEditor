@@ -20,6 +20,7 @@ import ru.nsu.diagrameditor.api.ComponentController.ResizeRequest;
 import ru.nsu.diagrameditor.api.ConnectorController.AddConnectorRequest;
 import ru.nsu.diagrameditor.api.DiagramController.CreateDiagramRequest;
 import ru.nsu.diagrameditor.api.DiagramController.OpenDiagramRequest;
+import ru.nsu.diagrameditor.api.DiagramController.SaveDiagramRequest;
 import ru.nsu.diagrameditor.api.DiagramController.SelectComponentSetRequest;
 import ru.nsu.diagrameditor.api.DiagramController.SelectSchemaRequest;
 import ru.nsu.diagrameditor.api.Point;
@@ -119,6 +120,12 @@ public class DiagramSteps {
         assertEquals(201, response.getStatus());
     }
 
+    @Дано("диаграмма сохранена в файл {string}")
+    public void diagramIsSaved(String name) throws Exception {
+        userSavesTo(name);
+        assertEquals(200, response.getStatus());
+    }
+
     @Когда("пользователь создаёт диаграмму с набором {string} и схемой {string}")
     public void userCreatesDiagram(String componentSet, String schema) throws Exception {
         send(post("/api/diagram"), new CreateDiagramRequest(componentSet, schema));
@@ -181,6 +188,21 @@ public class DiagramSteps {
     @Когда("пользователь открывает файл {string}")
     public void userOpensFile(String name) throws Exception {
         send(post("/api/diagram/open"), new OpenDiagramRequest(file(name).toString()));
+    }
+
+    @Когда("пользователь сохраняет диаграмму в файл {string}")
+    public void userSavesTo(String name) throws Exception {
+        send(post("/api/diagram/save"), new SaveDiagramRequest(file(name).toString(), false));
+    }
+
+    @Когда("пользователь сохраняет диаграмму в файл {string} с перезаписью")
+    public void userOverwrites(String name) throws Exception {
+        send(post("/api/diagram/save"), new SaveDiagramRequest(file(name).toString(), true));
+    }
+
+    @Когда("пользователь сохраняет диаграмму")
+    public void userSaves() throws Exception {
+        send(post("/api/diagram/save"), new SaveDiagramRequest(null, false));
     }
 
     @Когда("пользователь выбирает набор компонентов {string}")
@@ -295,6 +317,16 @@ public class DiagramSteps {
     @Тогда("на диаграмме блоков: {int}")
     public void diagramHasBlocks(int count) throws Exception {
         assertEquals(count, diagram().read("$.blocks", List.class).size());
+    }
+
+    @Тогда("в файле {string} блоков: {int}")
+    public void fileHasBlocks(String name, int count) throws Exception {
+        assertEquals(count, JsonPath.parse(file(name).toFile()).read("$.blocks", List.class).size());
+    }
+
+    @Тогда("файл {string} содержит {string}")
+    public void fileContains(String name, String text) throws IOException {
+        assertTrue(Files.readString(file(name)).contains(text));
     }
 
     @Тогда("активен набор компонентов {string}")
