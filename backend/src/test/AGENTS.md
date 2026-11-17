@@ -1,55 +1,47 @@
 # AGENTS.md — Backend tests
 
-Unit tests and Cucumber scenarios for the Spring Boot backend. **No Spring context, no mocks**: tests drive `DiagramEditor` directly.
+Cucumber scenarios in Russian that drive the backend through its REST API (MockMvc, full Spring context). **No JUnit unit tests**: every check goes through an endpoint and its JSON response.
 
 ## Purpose
 
-Every implemented use case from the project doc (UC-1…UC-13) is covered twice: a JUnit 5 unit test class and a Cucumber feature written in Russian. Only backend behaviour is tested; flows that live in the UI only (A1 "the user cancels") are not.
+Every implemented use case from the project doc (UC-1…UC-13) has a Cucumber feature: scenarios send HTTP requests to the endpoints and check status codes and JSON. Only backend behaviour is tested; flows that live in the UI only (A1 "the user cancels") are not.
 
 ## Architecture
 
 ```
 backend/src/test/
 ├── java/ru/nsu/diagrameditor/
-│   ├── TestEditors.java           — the only place tests build a DiagramEditor
-│   ├── CucumberTest.java          — JUnit Platform Suite that runs resources/features
-│   ├── service/<Action>Test.java  — unit tests, one class per use case
-│   └── steps/DiagramSteps.java    — all Cucumber step definitions
+│   ├── CucumberTest.java                        — JUnit Platform Suite that runs resources/features
+│   └── steps/
+│       ├── CucumberSpringConfiguration.java     — @CucumberContextConfiguration + @SpringBootTest + @AutoConfigureMockMvc
+│       └── DiagramSteps.java                    — all step definitions
 └── resources/features/
-    └── ucN_<action>.feature       — one feature per use case, in Russian
+    └── ucN_<action>.feature                     — one feature per use case, in Russian
 ```
 
-## Unit tests
-
-- One class per use case in `service`, named after the action: `CreateDiagramTest` (UC-1), `AddBlockTest` (UC-2).
-- Cover the main flow and every alternative flow the backend handles, one test method per flow; the name describes behaviour (`rejectsUnavailableSchema`).
-- Build the editor with `TestEditors.create()` in `@BeforeEach`. Never call `new DiagramEditor(...)` in a test: when its constructor changes, only `TestEditors` is edited.
-- Plain JUnit 5 `Assertions`. No `@SpringBootTest`, no Mockito; component sets and schemas come from `InMemoryResourceRepository` (`uml-class`, `flowchart`).
-- Assert errors by the concrete `EditorException` subclass (`assertThrows(SchemaViolationException.class, ...)`) and check that a rejected action left the state unchanged.
-- Separate arrange / act / assert with blank lines.
-
-## Cucumber scenarios
+## Scenarios
 
 - File `resources/features/ucN_<action>.feature`; first line `# language: ru`, then `Функция: UC-N <name from the doc>`.
-- One `Сценарий` per flow; alternative flows start with the doc's id: `Сценарий: A2. ...`.
+- One `Сценарий` per flow: the main flow, every alternative flow the backend handles, free mode where strict mode refuses something. Alternative flows start with the doc's id: `Сценарий: A2. ...`.
 - Steps are plain Russian sentences with `Дано` / `Когда` / `Тогда` / `И`; parameters are quoted strings (`"uml-class"`) or numbers.
 - Reuse existing phrases from `DiagramSteps` before adding new ones; keep the wording identical so one step definition serves every feature.
-- A rejected action is checked by its HTTP status: `Тогда редактор отказывает с ошибкой 422`.
+- A refused action is checked by its HTTP status: `Тогда редактор отказывает с ошибкой 422`. After a refusal, also check that the diagram did not change.
 
 ## Step definitions
 
-- All steps live in `steps/DiagramSteps`: there is no DI container, so state can be shared only inside one class. Cucumber creates a new instance per scenario.
-- Annotations come from `io.cucumber.java.ru` (`@Дано`, `@Когда`, `@Тогда`); parameters use Cucumber expressions `{string}`, `{int}`.
-- `Когда` steps that may fail go through `attempt(...)`, which stores the `EditorException`; `Тогда` steps assert on it.
-- Method names are in English.
+- All steps live in `steps/DiagramSteps`; Spring autowires `MockMvc`, `ObjectMapper` and `DiagramEditor` into it. Cucumber creates a new instance per scenario, the Spring context is shared.
+- `@Before` closes the open diagram: `DiagramEditor` is a singleton and would otherwise carry state between scenarios. This is the only direct use of `DiagramEditor` in tests.
+- Request bodies are the API's own request records (`CreateDiagramRequest`, `AddBlockRequest`, …) serialized with `ObjectMapper`.
+- `Дано` steps assert their request succeeded; `Когда` steps only store the response; `Тогда` steps read the state through `GET /api/diagram` (JsonPath) and never inspect Java objects.
+- Annotations come from `io.cucumber.java.ru`; parameters use Cucumber expressions `{string}`, `{int}`. Method names are in English.
 
 ## Adding a use case
 
 1. Every new error is a subclass of `EditorException` with its HTTP status; `ApiExceptionHandler` needs no changes.
-2. Add `service/<Action>Test` with the main and alternative flows.
+2. Whatever the scenarios need to check must be visible in `GET /api/diagram`.
 3. Add `features/ucN_<action>.feature` and only the missing steps in `DiagramSteps`.
-4. If the change breaks tests of other use cases (e.g. a new `DiagramEditor` dependency), fix them in the same commit.
-5. Tests are committed by the author of the use case, in a separate commit: `UC-N: unit tests for <action>`.
+4. If the change breaks scenarios of other use cases, fix them in the same commit.
+5. Scenarios go in a separate commit by the author of the use case: `UC-N: Cucumber scenarios`.
 6. Before merging, merge `main` into the branch and run `gradle test` in `backend/`.
 
 ## Constraints
