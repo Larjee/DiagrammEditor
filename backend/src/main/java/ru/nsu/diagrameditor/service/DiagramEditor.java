@@ -100,6 +100,14 @@ public class DiagramEditor {
         return connector;
     }
 
+    public Block moveComponent(String componentId, double x, double y) {
+        if (!(getComponent(componentId) instanceof Block block)) {
+            throw new InvalidRequestException("Connector position is defined by its ports");
+        }
+        block.moveTo(x, y);
+        return block;
+    }
+
     public Block resizeComponent(String componentId, double width, double height) {
         Diagram diagram = getDiagram();
         if (!(getComponent(componentId) instanceof Block block)) {
