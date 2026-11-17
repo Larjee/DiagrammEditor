@@ -78,6 +78,22 @@ public class DiagramEditor {
         return connector;
     }
 
+    public Block resizeComponent(String componentId, double width, double height) {
+        Diagram diagram = getDiagram();
+        if (!(getComponent(componentId) instanceof Block block)) {
+            throw new InvalidRequestException("Connector size is defined by its ports");
+        }
+        if (width <= 0 || height <= 0) {
+            throw new InvalidRequestException("Size must be positive");
+        }
+        if (diagram.getMode() == EditMode.STRICT && !validator.canResize(diagram, block, width, height)) {
+            throw new SchemaViolationException("Size " + width + " x " + height + " of '" + block.getType()
+                    + "' is beyond the limits of schema '" + diagram.getSchema().getName() + "'");
+        }
+        block.resize(width, height);
+        return block;
+    }
+
     public Diagram getDiagram() {
         if (diagram == null) {
             throw new NoOpenDiagramException();
