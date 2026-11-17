@@ -58,10 +58,18 @@ public class DiagramController {
         return DiagramResponse.from(editor.setComponentSet(request.componentSet()));
     }
 
+    @PutMapping("/diagram/schema")
+    public DiagramResponse selectSchema(@RequestBody SelectSchemaRequest request) {
+        return DiagramResponse.from(editor.setSchema(request.schema()));
+    }
+
     public record CreateDiagramRequest(String componentSet, String schema) {
     }
 
     public record SelectComponentSetRequest(String componentSet) {
+    }
+
+    public record SelectSchemaRequest(String schema) {
     }
 
     public record DiagramResponse(
