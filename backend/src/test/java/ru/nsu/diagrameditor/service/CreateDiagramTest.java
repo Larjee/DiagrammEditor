@@ -18,7 +18,7 @@ class CreateDiagramTest {
 
     @BeforeEach
     void setUp() {
-        editor = new DiagramEditor(new InMemoryResourceRepository());
+        editor = new DiagramEditor(new InMemoryResourceRepository(), new SchemaValidator());
     }
 
     @Test
