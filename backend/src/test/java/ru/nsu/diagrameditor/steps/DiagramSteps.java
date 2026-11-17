@@ -3,6 +3,7 @@ package ru.nsu.diagrameditor.steps;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.ru.Дано;
 import io.cucumber.java.ru.Когда;
@@ -13,17 +14,22 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.util.FileSystemUtils;
 import ru.nsu.diagrameditor.api.BlockController.AddBlockRequest;
 import ru.nsu.diagrameditor.api.ComponentController.ResizeRequest;
 import ru.nsu.diagrameditor.api.ConnectorController.AddConnectorRequest;
 import ru.nsu.diagrameditor.api.DiagramController.CreateDiagramRequest;
+import ru.nsu.diagrameditor.api.DiagramController.OpenDiagramRequest;
 import ru.nsu.diagrameditor.api.DiagramController.SelectComponentSetRequest;
 import ru.nsu.diagrameditor.api.DiagramController.SelectSchemaRequest;
 import ru.nsu.diagrameditor.api.Point;
 import ru.nsu.diagrameditor.api.PortRef;
 import ru.nsu.diagrameditor.service.DiagramEditor;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,10 +66,26 @@ public class DiagramSteps {
 
     private final Map<String, String> ids = new HashMap<>();
     private MockHttpServletResponse response;
+    private Path files;
 
     @Before
     public void closeDiagram() {
         ReflectionTestUtils.setField(editor, "diagram", null);
+    }
+
+    @Before
+    public void createFilesDirectory() throws IOException {
+        files = Files.createTempDirectory("diagram-editor");
+    }
+
+    @After
+    public void deleteFilesDirectory() throws IOException {
+        FileSystemUtils.deleteRecursively(files);
+    }
+
+    @Дано("файл {string} с содержимым:")
+    public void fileHasContent(String name, String content) throws IOException {
+        Files.writeString(file(name), content);
     }
 
     @Дано("открыта диаграмма с набором {string} и схемой {string}")
@@ -154,6 +176,11 @@ public class DiagramSteps {
     @Когда("пользователь переносит точку изгиба {int} коннектора {string} в {int}, {int}")
     public void userMovesInflectionPoint(int number, String name, int x, int y) throws Exception {
         send(put("/api/diagram/connectors/{id}/points/{index}", id(name), number - 1), new Point(x, y));
+    }
+
+    @Когда("пользователь открывает файл {string}")
+    public void userOpensFile(String name) throws Exception {
+        send(post("/api/diagram/open"), new OpenDiagramRequest(file(name).toString()));
     }
 
     @Когда("пользователь выбирает набор компонентов {string}")
@@ -260,6 +287,16 @@ public class DiagramSteps {
         assertEquals(y, ((Number) point.get("y")).doubleValue());
     }
 
+    @Тогда("открыта диаграмма из файла {string}")
+    public void diagramIsOpenFromFile(String name) throws Exception {
+        assertEquals(file(name).toString(), diagram().read("$.filePath"));
+    }
+
+    @Тогда("на диаграмме блоков: {int}")
+    public void diagramHasBlocks(int count) throws Exception {
+        assertEquals(count, diagram().read("$.blocks", List.class).size());
+    }
+
     @Тогда("активен набор компонентов {string}")
     public void componentSetIsActive(String componentSet) throws Exception {
         assertEquals(componentSet, diagram().read("$.componentSet"));
@@ -289,6 +326,10 @@ public class DiagramSteps {
     private void send(MockHttpServletRequestBuilder request, Object body) throws Exception {
         response = mvc.perform(request.contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body)))
                 .andReturn().getResponse();
+    }
+
+    private Path file(String name) {
+        return files.resolve(name);
     }
 
     private String id(String name) {
