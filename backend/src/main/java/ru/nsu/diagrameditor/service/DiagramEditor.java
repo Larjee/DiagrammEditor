@@ -52,7 +52,7 @@ public class DiagramEditor {
 
     private Diagram requireDiagram() {
         if (diagram == null) {
-            throw new IllegalStateException("No diagram is open for editing");
+            throw new NoOpenDiagramException();
         }
         return diagram;
     }

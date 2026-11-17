@@ -1,8 +1,10 @@
 package ru.nsu.diagrameditor.service;
 
-public class ResourceNotFoundException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class ResourceNotFoundException extends EditorException {
 
     public ResourceNotFoundException(String message) {
-        super(message);
+        super(HttpStatus.NOT_FOUND, message);
     }
 }

@@ -54,6 +54,6 @@ class AddBlockTest {
 
     @Test
     void failsWhenNoDiagramIsOpen() {
-        assertThrows(IllegalStateException.class, () -> editor.addBlock("class", 0, 0));
+        assertThrows(NoOpenDiagramException.class, () -> editor.addBlock("class", 0, 0));
     }
 }

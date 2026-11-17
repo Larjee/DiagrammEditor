@@ -1,8 +1,10 @@
 package ru.nsu.diagrameditor.service;
 
-public class SchemaViolationException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class SchemaViolationException extends EditorException {
 
     public SchemaViolationException(String message) {
-        super(message);
+        super(HttpStatus.UNPROCESSABLE_ENTITY, message);
     }
 }
