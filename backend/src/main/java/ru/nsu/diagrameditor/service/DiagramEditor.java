@@ -58,6 +58,20 @@ public class DiagramEditor {
         return diagram;
     }
 
+    public Diagram saveDiagram(String path, boolean overwrite) {
+        Diagram diagram = getDiagram();
+        String target = path != null ? path : diagram.getFilePath();
+        if (target == null) {
+            throw new InvalidRequestException("Choose a file to save the diagram to");
+        }
+        if (!target.equals(diagram.getFilePath()) && storage.exists(target) && !overwrite) {
+            throw new FileExistsException(target);
+        }
+        storage.save(diagram, target);
+        diagram.setFilePath(target);
+        return diagram;
+    }
+
     public Diagram setComponentSet(String componentSetName) {
         Diagram diagram = getDiagram();
         diagram.setComponentSet(loadComponentSet(componentSetName));
