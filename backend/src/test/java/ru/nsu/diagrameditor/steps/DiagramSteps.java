@@ -39,6 +39,12 @@ public class DiagramSteps {
             "пунктирная", "DASHED",
             "точечная", "DOTTED");
 
+    private static final Map<String, String> SIDES = Map.of(
+            "справа", "RIGHT",
+            "слева", "LEFT",
+            "сверху", "TOP",
+            "снизу", "BOTTOM");
+
     @Autowired
     private MockMvc mvc;
 
@@ -102,6 +108,14 @@ public class DiagramSteps {
                 new PortRef(id(source), "RIGHT", 0.5), new PortRef(id(target), "LEFT", 0.5)));
     }
 
+    @Когда("пользователь тянет коннектор {string} от порта {string} блока {string} к порту {string} блока {string}")
+    public void userDragsConnector(String connectorType, String sourceSide, String source,
+                                   String targetSide, String target) throws Exception {
+        send(post("/api/diagram/connectors"), new AddConnectorRequest(connectorType,
+                new PortRef(id(source), SIDES.getOrDefault(sourceSide, sourceSide), 0.5),
+                new PortRef(id(target), SIDES.getOrDefault(targetSide, targetSide), 0.5)));
+    }
+
     @Когда("пользователь задаёт компоненту {string} размер {int} на {int}")
     public void userResizes(String name, int width, int height) throws Exception {
         send(put("/api/diagram/components/{id}/size", id(name)), new ResizeRequest(width, height));
@@ -142,6 +156,16 @@ public class DiagramSteps {
     @Тогда("на диаграмме нет коннекторов")
     public void diagramHasNoConnectors() throws Exception {
         assertTrue(diagram().read("$.connectors", List.class).isEmpty());
+    }
+
+    @Тогда("на диаграмме коннекторов: {int}")
+    public void diagramHasConnectors(int count) throws Exception {
+        assertEquals(count, diagram().read("$.connectors", List.class).size());
+    }
+
+    @Тогда("у блока {string} портов: {int}")
+    public void blockHasPorts(String name, int count) throws Exception {
+        assertEquals(count, ((List<?>) block(name).get("ports")).size());
     }
 
     @Тогда("на диаграмме коннектор {string} от {string} к {string}")
