@@ -32,7 +32,8 @@ backend/src/test/
 
 - All steps live in `steps/DiagramSteps`; Spring autowires `MockMvc`, `ObjectMapper` and `DiagramEditor` into it. Cucumber creates a new instance per scenario, the Spring context is shared.
 - `@Before` closes the open diagram: `DiagramEditor` is a singleton and would otherwise carry state between scenarios. This is the only direct use of `DiagramEditor` in tests.
-- Request bodies are the API's own request records (`CreateDiagramRequest`, `AddBlockRequest`, …) serialized with `ObjectMapper`.
+- Request bodies are the API's own request records (`CreateDiagramRequest`, `AddBlockRequest`, …) serialized with `ObjectMapper`. A style change sends the component's style JSON from `GET /api/diagram` with one field replaced.
+- Enum values are written in Russian in scenarios and mapped in `DiagramSteps` (`пунктирная` → `DASHED`).
 - `Дано` steps assert their request succeeded; `Когда` steps only store the response; `Тогда` steps read the state through `GET /api/diagram` (JsonPath) and never inspect Java objects.
 - Annotations come from `io.cucumber.java.ru`; parameters use Cucumber expressions `{string}`, `{int}`. Method names are in English.
 
