@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.nsu.diagrameditor.model.Block;
 import ru.nsu.diagrameditor.model.ComponentSet;
+import ru.nsu.diagrameditor.model.Connector;
 import ru.nsu.diagrameditor.model.Diagram;
 import ru.nsu.diagrameditor.model.EditMode;
 import ru.nsu.diagrameditor.model.Schema;
@@ -60,7 +61,8 @@ public class DiagramController {
             EditMode mode,
             List<String> blockTypes,
             List<String> connectorTypes,
-            List<BlockResponse> blocks
+            List<BlockResponse> blocks,
+            List<ConnectorResponse> connectors
     ) {
         static DiagramResponse from(Diagram diagram) {
             ComponentSet set = diagram.getComponentSet();
@@ -69,8 +71,12 @@ public class DiagramController {
                     .filter(Block.class::isInstance)
                     .map(component -> BlockResponse.from((Block) component))
                     .toList();
+            List<ConnectorResponse> connectors = diagram.getComponents().stream()
+                    .filter(Connector.class::isInstance)
+                    .map(component -> ConnectorResponse.from((Connector) component))
+                    .toList();
             return new DiagramResponse(set.getName(), schema, diagram.getMode(),
-                    set.getBlockTypes(), set.getConnectorTypes(), blocks);
+                    set.getBlockTypes(), set.getConnectorTypes(), blocks, connectors);
         }
     }
 }

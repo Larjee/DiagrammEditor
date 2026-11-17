@@ -2,11 +2,16 @@ package ru.nsu.diagrameditor.service;
 
 import org.springframework.stereotype.Service;
 import ru.nsu.diagrameditor.model.Block;
+import ru.nsu.diagrameditor.model.Component;
 import ru.nsu.diagrameditor.model.ComponentSet;
+import ru.nsu.diagrameditor.model.Connector;
 import ru.nsu.diagrameditor.model.Diagram;
 import ru.nsu.diagrameditor.model.EditMode;
+import ru.nsu.diagrameditor.model.Port;
 import ru.nsu.diagrameditor.model.Schema;
 import ru.nsu.diagrameditor.repository.ResourceRepository;
+
+import java.util.List;
 
 @Service
 public class DiagramEditor {
@@ -46,10 +51,58 @@ public class DiagramEditor {
         return block;
     }
 
+    public Port findPort(String blockId, String side, double offset) {
+        if (side == null) {
+            throw new InvalidRequestException("Port side is required");
+        }
+        Block block = getBlock(blockId);
+        return block.getPorts().stream()
+                .filter(port -> port.getSide().equals(side) && port.getOffset() == offset)
+                .findFirst()
+                .orElseGet(() -> new Port(block, side, offset));
+    }
+
+    public Connector addConnector(String connectorType, Port sourcePort, Port targetPort) {
+        Diagram diagram = getDiagram();
+        if (diagram.getMode() == EditMode.STRICT
+                && !validator.canConnect(diagram, connectorType, sourcePort, targetPort)) {
+            throw new SchemaViolationException("Connector '" + connectorType + "' from '"
+                    + sourcePort.getOwner().getType() + "' to '" + targetPort.getOwner().getType()
+                    + "' is not permitted by schema '" + diagram.getSchema().getName() + "'");
+        }
+        Connector connector = new Connector(connectorType, diagram.getComponentSet().getDefaultStyle(connectorType));
+        addPortIfNew(sourcePort);
+        addPortIfNew(targetPort);
+        connector.connect(sourcePort, targetPort);
+        diagram.addComponent(connector);
+        return connector;
+    }
+
     public Diagram getDiagram() {
         if (diagram == null) {
             throw new NoOpenDiagramException();
         }
         return diagram;
+    }
+
+    private Component getComponent(String id) {
+        return getDiagram().getComponents().stream()
+                .filter(component -> component.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Component '" + id + "' not found"));
+    }
+
+    private Block getBlock(String id) {
+        if (getComponent(id) instanceof Block block) {
+            return block;
+        }
+        throw new InvalidRequestException("Component '" + id + "' is not a block");
+    }
+
+    private static void addPortIfNew(Port port) {
+        List<Port> ports = port.getOwner().getPorts();
+        if (!ports.contains(port)) {
+            ports.add(port);
+        }
     }
 }
