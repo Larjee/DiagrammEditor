@@ -29,13 +29,7 @@ public class DiagramEditor {
 
     public Diagram createDiagram(String componentSetName, String schemaName) {
         ComponentSet componentSet = loadComponentSet(componentSetName);
-        Schema schema = null;
-        if (schemaName != null) {
-            schema = resources.loadSchema(schemaName)
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Schema '" + schemaName + "' is invalid or unavailable. "
-                                    + "Select another schema or continue without one"));
-        }
+        Schema schema = schemaName == null ? null : loadSchema(schemaName);
         diagram = new Diagram(componentSet, schema);
         return diagram;
     }
@@ -54,6 +48,12 @@ public class DiagramEditor {
     public Diagram setComponentSet(String componentSetName) {
         Diagram diagram = getDiagram();
         diagram.setComponentSet(loadComponentSet(componentSetName));
+        return diagram;
+    }
+
+    public Diagram setSchema(String schemaName) {
+        Diagram diagram = getDiagram();
+        diagram.setSchema(schemaName == null ? null : loadSchema(schemaName));
         return diagram;
     }
 
@@ -137,6 +137,12 @@ public class DiagramEditor {
     private ComponentSet loadComponentSet(String name) {
         return resources.loadComponentSet(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Component set '" + name + "' is not available"));
+    }
+
+    private Schema loadSchema(String name) {
+        return resources.loadSchema(name)
+                .orElseThrow(() -> new ResourceNotFoundException("Schema '" + name + "' is invalid or unavailable. "
+                        + "Select another schema or continue without one"));
     }
 
     private Component getComponent(String id) {
