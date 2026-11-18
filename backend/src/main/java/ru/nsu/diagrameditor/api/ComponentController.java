@@ -25,6 +25,12 @@ public class ComponentController {
         this.editor = editor;
     }
 
+    @PutMapping("/position")
+    public BlockResponse move(@PathVariable String id, @RequestBody MoveRequest request) {
+        Block block = editor.moveComponent(id, request.x(), request.y());
+        return BlockResponse.from(block);
+    }
+
     @PutMapping("/size")
     public BlockResponse resize(@PathVariable String id, @RequestBody ResizeRequest request) {
         Block block = editor.resizeComponent(id, request.width(), request.height());
@@ -35,6 +41,9 @@ public class ComponentController {
     public StyleResponse changeStyle(@PathVariable String id, @RequestBody StyleRequest request) {
         Component component = editor.changeStyle(id, request.toStyle());
         return StyleResponse.from(component.getStyle());
+    }
+
+    public record MoveRequest(double x, double y) {
     }
 
     public record ResizeRequest(double width, double height) {

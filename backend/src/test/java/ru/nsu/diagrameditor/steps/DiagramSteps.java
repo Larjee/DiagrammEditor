@@ -14,6 +14,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import ru.nsu.diagrameditor.api.BlockController.AddBlockRequest;
+import ru.nsu.diagrameditor.api.ComponentController.MoveRequest;
 import ru.nsu.diagrameditor.api.ComponentController.ResizeRequest;
 import ru.nsu.diagrameditor.api.ConnectorController.AddConnectorRequest;
 import ru.nsu.diagrameditor.api.DiagramController.CreateDiagramRequest;
@@ -126,6 +127,11 @@ public class DiagramSteps {
                 new PortRef(id(target), SIDES.getOrDefault(targetSide, targetSide), 0.5)));
     }
 
+    @Когда("пользователь перемещает {string} в точку {int}, {int}")
+    public void userMoves(String name, int x, int y) throws Exception {
+        send(put("/api/diagram/components/{id}/position", id(name)), new MoveRequest(x, y));
+    }
+
     @Когда("пользователь задаёт компоненту {string} размер {int} на {int}")
     public void userResizes(String name, int width, int height) throws Exception {
         send(put("/api/diagram/components/{id}/size", id(name)), new ResizeRequest(width, height));
@@ -217,6 +223,13 @@ public class DiagramSteps {
         assertEquals(blockType, diagram.read("$.blocks[0].type"));
         assertEquals(x, number(diagram, "$.blocks[0].x"));
         assertEquals(y, number(diagram, "$.blocks[0].y"));
+    }
+
+    @Тогда("блок {string} находится в точке {int}, {int}")
+    public void blockIsAt(String name, int x, int y) throws Exception {
+        Map<String, Object> block = block(name);
+        assertEquals(x, ((Number) block.get("x")).doubleValue());
+        assertEquals(y, ((Number) block.get("y")).doubleValue());
     }
 
     @Тогда("размер блока {string} равен {int} на {int}")
