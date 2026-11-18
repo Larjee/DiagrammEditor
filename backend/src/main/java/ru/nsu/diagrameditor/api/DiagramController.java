@@ -1,6 +1,7 @@
 package ru.nsu.diagrameditor.api;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -51,6 +52,12 @@ public class DiagramController {
     public DiagramResponse createDiagram(@RequestBody CreateDiagramRequest request) {
         Diagram diagram = editor.createDiagram(request.componentSet(), request.schema());
         return DiagramResponse.from(diagram);
+    }
+
+    @DeleteMapping("/diagram")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteDiagram() {
+        editor.deleteDiagram();
     }
 
     @PostMapping("/diagram/open")

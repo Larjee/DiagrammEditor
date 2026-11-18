@@ -67,6 +67,15 @@ public class JsonDiagramStorage implements DiagramStorage {
         }
     }
 
+    @Override
+    public void delete(String path) {
+        try {
+            Files.deleteIfExists(Path.of(path));
+        } catch (IOException e) {
+            throw new DiagramFileException("Cannot delete '" + path + "'");
+        }
+    }
+
     private static DiagramFile toFile(Diagram diagram) {
         List<DiagramFile.BlockData> blocks = diagram.getComponents().stream()
                 .filter(Block.class::isInstance)
