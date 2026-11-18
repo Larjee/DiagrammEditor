@@ -28,9 +28,7 @@ public class DiagramEditor {
     }
 
     public Diagram createDiagram(String componentSetName, String schemaName) {
-        ComponentSet componentSet = resources.loadComponentSet(componentSetName)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Component set '" + componentSetName + "' is not available"));
+        ComponentSet componentSet = loadComponentSet(componentSetName);
         Schema schema = null;
         if (schemaName != null) {
             schema = resources.loadSchema(schemaName)
@@ -51,6 +49,12 @@ public class DiagramEditor {
         Block block = new Block(blockType, x, y, diagram.getComponentSet().getDefaultStyle(blockType));
         diagram.addComponent(block);
         return block;
+    }
+
+    public Diagram setComponentSet(String componentSetName) {
+        Diagram diagram = getDiagram();
+        diagram.setComponentSet(loadComponentSet(componentSetName));
+        return diagram;
     }
 
     public Port findPort(String blockId, String side, double offset) {
@@ -128,6 +132,11 @@ public class DiagramEditor {
             throw new NoOpenDiagramException();
         }
         return diagram;
+    }
+
+    private ComponentSet loadComponentSet(String name) {
+        return resources.loadComponentSet(name)
+                .orElseThrow(() -> new ResourceNotFoundException("Component set '" + name + "' is not available"));
     }
 
     private Component getComponent(String id) {

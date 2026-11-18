@@ -17,6 +17,7 @@ import ru.nsu.diagrameditor.api.BlockController.AddBlockRequest;
 import ru.nsu.diagrameditor.api.ComponentController.ResizeRequest;
 import ru.nsu.diagrameditor.api.ConnectorController.AddConnectorRequest;
 import ru.nsu.diagrameditor.api.DiagramController.CreateDiagramRequest;
+import ru.nsu.diagrameditor.api.DiagramController.SelectComponentSetRequest;
 import ru.nsu.diagrameditor.api.Point;
 import ru.nsu.diagrameditor.api.PortRef;
 import ru.nsu.diagrameditor.service.DiagramEditor;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -148,6 +150,11 @@ public class DiagramSteps {
         send(put("/api/diagram/connectors/{id}/points/{index}", id(name), number - 1), new Point(x, y));
     }
 
+    @Когда("пользователь выбирает набор компонентов {string}")
+    public void userSelectsComponentSet(String componentSet) throws Exception {
+        send(put("/api/diagram/component-set"), new SelectComponentSetRequest(componentSet));
+    }
+
     @Тогда("диаграмма открыта в строгом режиме")
     public void diagramIsStrict() throws Exception {
         assertEquals("STRICT", diagram().read("$.mode"));
@@ -228,6 +235,21 @@ public class DiagramSteps {
         Map<?, ?> point = (Map<?, ?>) ((List<?>) connector(name).get("points")).get(number - 1);
         assertEquals(x, ((Number) point.get("x")).doubleValue());
         assertEquals(y, ((Number) point.get("y")).doubleValue());
+    }
+
+    @Тогда("активен набор компонентов {string}")
+    public void componentSetIsActive(String componentSet) throws Exception {
+        assertEquals(componentSet, diagram().read("$.componentSet"));
+    }
+
+    @Тогда("в палитре есть блок {string}")
+    public void paletteHasBlock(String blockType) throws Exception {
+        assertTrue(diagram().read("$.blockTypes", List.class).contains(blockType));
+    }
+
+    @Тогда("в палитре нет блока {string}")
+    public void paletteHasNoBlock(String blockType) throws Exception {
+        assertFalse(diagram().read("$.blockTypes", List.class).contains(blockType));
     }
 
     @Тогда("редактор отказывает с ошибкой {int}")
