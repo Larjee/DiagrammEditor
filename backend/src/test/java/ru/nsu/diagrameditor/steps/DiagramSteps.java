@@ -9,6 +9,7 @@ import io.cucumber.java.ru.Дано;
 import io.cucumber.java.ru.Когда;
 import io.cucumber.java.ru.Тогда;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,8 +71,12 @@ public class DiagramSteps {
     private DiagramEditor editor;
 
     private final Map<String, String> ids = new HashMap<>();
+    @Value("${editor.data-dir}")
+    private Path dataDir;
+
     private MockHttpServletResponse response;
     private Path files;
+    private final List<Path> dataFiles = new ArrayList<>();
 
     @Before
     public void closeDiagram() {
@@ -85,6 +91,19 @@ public class DiagramSteps {
     @After
     public void deleteFilesDirectory() throws IOException {
         FileSystemUtils.deleteRecursively(files);
+        for (Path file : dataFiles) {
+            Files.deleteIfExists(file);
+        }
+    }
+
+    @Дано("в папке схем лежит файл {string} с содержимым:")
+    public void schemaFileHasContent(String name, String content) throws IOException {
+        writeDataFile("schemas", name, content);
+    }
+
+    @Дано("в папке наборов компонентов лежит файл {string} с содержимым:")
+    public void componentSetFileHasContent(String name, String content) throws IOException {
+        writeDataFile("component-sets", name, content);
     }
 
     @Дано("файл {string} с содержимым:")
@@ -344,6 +363,21 @@ public class DiagramSteps {
         assertTrue(Files.readString(file(name)).contains(text));
     }
 
+    @Тогда("в списке наборов компонентов есть {string}")
+    public void componentSetIsListed(String componentSet) throws Exception {
+        assertTrue(list("/api/component-sets").contains(componentSet));
+    }
+
+    @Тогда("в списке схем есть {string}")
+    public void schemaIsListed(String schema) throws Exception {
+        assertTrue(list("/api/schemas").contains(schema));
+    }
+
+    @Тогда("в списке схем нет {string}")
+    public void schemaIsNotListed(String schema) throws Exception {
+        assertFalse(list("/api/schemas").contains(schema));
+    }
+
     @Тогда("активен набор компонентов {string}")
     public void componentSetIsActive(String componentSet) throws Exception {
         assertEquals(componentSet, diagram().read("$.componentSet"));
@@ -393,6 +427,16 @@ public class DiagramSteps {
     private void send(MockHttpServletRequestBuilder request, Object body) throws Exception {
         response = mvc.perform(request.contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body)))
                 .andReturn().getResponse();
+    }
+
+    private void writeDataFile(String folder, String name, String content) throws IOException {
+        Path file = dataDir.resolve(folder).resolve(name);
+        Files.writeString(file, content);
+        dataFiles.add(file);
+    }
+
+    private List<?> list(String path) throws Exception {
+        return JsonPath.parse(body(mvc.perform(get(path)).andReturn().getResponse())).read("$", List.class);
     }
 
     private Path file(String name) {

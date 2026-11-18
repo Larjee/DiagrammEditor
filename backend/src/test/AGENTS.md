@@ -37,6 +37,7 @@ backend/src/test/
 - `Дано` steps assert their request succeeded; `Когда` steps only store the response; `Тогда` steps read the state through `GET /api/diagram` (JsonPath) and never inspect Java objects.
 - Annotations come from `io.cucumber.java.ru`; parameters use Cucumber expressions `{string}`, `{int}`. Method names are in English.
 - Files: scenarios use plain file names (`"orders.json"`); steps resolve them in a temp directory created before and deleted after every scenario. File contents are given as doc strings (`"""`).
+- Data folder: tests get a fresh temp `editor.data-dir` per run (`@DynamicPropertySource` in `CucumberSpringConfiguration`), so built-in sets and schemas are copied from `src/main/resources/defaults`. Files a scenario adds there are deleted after it.
 
 ## Adding a use case
 

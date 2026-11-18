@@ -1,0 +1,4 @@
+{
+  "blockTypes": ["class", "interface", "enum"],
+  "connectorTypes": ["association", "inheritance", "realization", "dependency", "aggregation", "composition"]
+}

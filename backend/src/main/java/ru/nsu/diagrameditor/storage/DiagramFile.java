@@ -65,7 +65,7 @@ public record DiagramFile(
             return String.format("#%06x", color.getRGB() & 0xffffff);
         }
 
-        Style toStyle() {
+        public Style toStyle() {
             return new Style(Color.decode(borderColor), borderWidth, Color.decode(backgroundColor),
                     new Font(font, Font.PLAIN, fontSize), lineType);
         }

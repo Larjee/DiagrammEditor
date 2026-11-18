@@ -1,0 +1,26 @@
+{
+  "allowedBlockTypes": ["class", "interface", "enum"],
+  "allowedConnectorTypes": ["association", "inheritance", "realization", "dependency"],
+  "maxPorts": {"class": 8, "interface": 8, "enum": 4},
+  "connectionRules": [
+    {"connectorType": "inheritance", "sourceBlockType": "class", "targetBlockType": "class"},
+    {"connectorType": "inheritance", "sourceBlockType": "interface", "targetBlockType": "interface"},
+    {"connectorType": "realization", "sourceBlockType": "class", "targetBlockType": "interface"},
+    {"connectorType": "association", "sourceBlockType": "class", "targetBlockType": "class"},
+    {"connectorType": "dependency", "sourceBlockType": "class", "targetBlockType": "class"},
+    {"connectorType": "dependency", "sourceBlockType": "class", "targetBlockType": "interface"}
+  ],
+  "sizeLimits": {
+    "class": {"width": 600, "height": 400},
+    "interface": {"width": 600, "height": 400},
+    "enum": {"width": 400, "height": 300}
+  },
+  "allowedStyles": {
+    "interface": [
+      {"borderColor": "#000000", "borderWidth": 1, "backgroundColor": "#ffffff",
+       "font": "SansSerif", "fontSize": 12, "lineType": "SOLID"},
+      {"borderColor": "#000000", "borderWidth": 1, "backgroundColor": "#ffffff",
+       "font": "SansSerif", "fontSize": 12, "lineType": "DASHED"}
+    ]
+  }
+}

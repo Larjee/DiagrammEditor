@@ -1,0 +1,4 @@
+{
+  "blockTypes": ["start", "end", "process", "decision", "input-output"],
+  "connectorTypes": ["flow"]
+}

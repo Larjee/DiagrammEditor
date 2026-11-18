@@ -1,0 +1,21 @@
+{
+  "allowedBlockTypes": ["start", "end", "process", "decision", "input-output"],
+  "allowedConnectorTypes": ["flow"],
+  "maxPorts": {"start": 1, "end": 1, "decision": 3},
+  "connectionRules": [
+    {"connectorType": "flow", "sourceBlockType": "start", "targetBlockType": "process"},
+    {"connectorType": "flow", "sourceBlockType": "process", "targetBlockType": "process"},
+    {"connectorType": "flow", "sourceBlockType": "process", "targetBlockType": "decision"},
+    {"connectorType": "flow", "sourceBlockType": "decision", "targetBlockType": "process"},
+    {"connectorType": "flow", "sourceBlockType": "process", "targetBlockType": "input-output"},
+    {"connectorType": "flow", "sourceBlockType": "input-output", "targetBlockType": "process"},
+    {"connectorType": "flow", "sourceBlockType": "process", "targetBlockType": "end"}
+  ],
+  "sizeLimits": {
+    "start": {"width": 200, "height": 100},
+    "end": {"width": 200, "height": 100},
+    "process": {"width": 400, "height": 200},
+    "decision": {"width": 300, "height": 300},
+    "input-output": {"width": 400, "height": 200}
+  }
+}
