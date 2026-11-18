@@ -53,6 +53,11 @@ public class DiagramController {
         return DiagramResponse.from(diagram);
     }
 
+    @PostMapping("/diagram/open")
+    public DiagramResponse openDiagram(@RequestBody OpenDiagramRequest request) {
+        return DiagramResponse.from(editor.openDiagram(request.path()));
+    }
+
     @PutMapping("/diagram/component-set")
     public DiagramResponse selectComponentSet(@RequestBody SelectComponentSetRequest request) {
         return DiagramResponse.from(editor.setComponentSet(request.componentSet()));
@@ -66,6 +71,9 @@ public class DiagramController {
     public record CreateDiagramRequest(String componentSet, String schema) {
     }
 
+    public record OpenDiagramRequest(String path) {
+    }
+
     public record SelectComponentSetRequest(String componentSet) {
     }
 
@@ -73,6 +81,8 @@ public class DiagramController {
     }
 
     public record DiagramResponse(
+            String name,
+            String filePath,
             String componentSet,
             String schema,
             EditMode mode,
@@ -92,8 +102,8 @@ public class DiagramController {
                     .filter(Connector.class::isInstance)
                     .map(component -> ConnectorResponse.from((Connector) component))
                     .toList();
-            return new DiagramResponse(set.getName(), schema, diagram.getMode(),
-                    set.getBlockTypes(), set.getConnectorTypes(), blocks, connectors);
+            return new DiagramResponse(diagram.getName(), diagram.getFilePath(), set.getName(), schema,
+                    diagram.getMode(), set.getBlockTypes(), set.getConnectorTypes(), blocks, connectors);
         }
     }
 }

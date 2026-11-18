@@ -36,6 +36,7 @@ backend/src/test/
 - Enum values are written in Russian in scenarios and mapped in `DiagramSteps` (`пунктирная` → `DASHED`).
 - `Дано` steps assert their request succeeded; `Когда` steps only store the response; `Тогда` steps read the state through `GET /api/diagram` (JsonPath) and never inspect Java objects.
 - Annotations come from `io.cucumber.java.ru`; parameters use Cucumber expressions `{string}`, `{int}`. Method names are in English.
+- Files: scenarios use plain file names (`"orders.json"`); steps resolve them in a temp directory created before and deleted after every scenario. File contents are given as doc strings (`"""`).
 
 ## Adding a use case
 
