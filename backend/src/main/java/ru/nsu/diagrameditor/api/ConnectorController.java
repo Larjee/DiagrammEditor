@@ -1,7 +1,9 @@
 package ru.nsu.diagrameditor.api;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -28,6 +30,18 @@ public class ConnectorController {
         Port target = port(request.target());
         Connector connector = editor.addConnector(request.connectorType(), source, target);
         return ConnectorResponse.from(connector);
+    }
+
+    @PostMapping("/{id}/points")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ConnectorResponse addInflectionPoint(@PathVariable String id, @RequestBody Point point) {
+        return ConnectorResponse.from(editor.addInflectionPoint(id, point.x(), point.y()));
+    }
+
+    @PutMapping("/{id}/points/{index}")
+    public ConnectorResponse moveInflectionPoint(@PathVariable String id, @PathVariable int index,
+                                                 @RequestBody Point point) {
+        return ConnectorResponse.from(editor.moveInflectionPoint(id, index, point.x(), point.y()));
     }
 
     private Port port(PortRef ref) {

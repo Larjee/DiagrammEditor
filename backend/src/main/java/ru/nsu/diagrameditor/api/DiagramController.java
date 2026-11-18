@@ -3,6 +3,7 @@ package ru.nsu.diagrameditor.api;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -52,7 +53,23 @@ public class DiagramController {
         return DiagramResponse.from(diagram);
     }
 
+    @PutMapping("/diagram/component-set")
+    public DiagramResponse selectComponentSet(@RequestBody SelectComponentSetRequest request) {
+        return DiagramResponse.from(editor.setComponentSet(request.componentSet()));
+    }
+
+    @PutMapping("/diagram/schema")
+    public DiagramResponse selectSchema(@RequestBody SelectSchemaRequest request) {
+        return DiagramResponse.from(editor.setSchema(request.schema()));
+    }
+
     public record CreateDiagramRequest(String componentSet, String schema) {
+    }
+
+    public record SelectComponentSetRequest(String componentSet) {
+    }
+
+    public record SelectSchemaRequest(String schema) {
     }
 
     public record DiagramResponse(
