@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
@@ -361,6 +362,26 @@ public class DiagramSteps {
     @Тогда("в палитре нет блока {string}")
     public void paletteHasNoBlock(String blockType) throws Exception {
         assertFalse(diagram().read("$.blockTypes", List.class).contains(blockType));
+    }
+
+    @Когда("страница с адресом {string} спрашивает разрешение на {string} к {string}")
+    public void pageAsksForAccess(String origin, String method, String path) throws Exception {
+        response = mvc.perform(options(path)
+                        .header("Origin", origin)
+                        .header("Access-Control-Request-Method", method)
+                        .header("Access-Control-Request-Headers", "content-type"))
+                .andReturn().getResponse();
+    }
+
+    @Тогда("бэкенд разрешает запросы со страницы {string}")
+    public void backendAllows(String origin) {
+        assertEquals(200, response.getStatus());
+        assertEquals(origin, response.getHeader("Access-Control-Allow-Origin"));
+    }
+
+    @Тогда("бэкенд запрещает запрос")
+    public void backendForbids() {
+        assertEquals(403, response.getStatus());
     }
 
     @Тогда("редактор отказывает с ошибкой {int}")
