@@ -17,6 +17,7 @@ import ru.nsu.diagrameditor.api.BlockController.AddBlockRequest;
 import ru.nsu.diagrameditor.api.ComponentController.ResizeRequest;
 import ru.nsu.diagrameditor.api.ConnectorController.AddConnectorRequest;
 import ru.nsu.diagrameditor.api.DiagramController.CreateDiagramRequest;
+import ru.nsu.diagrameditor.api.Point;
 import ru.nsu.diagrameditor.api.PortRef;
 import ru.nsu.diagrameditor.service.DiagramEditor;
 
@@ -81,6 +82,12 @@ public class DiagramSteps {
         ids.put(name, JsonPath.read(body(response), "$.id"));
     }
 
+    @Дано("у коннектора {string} есть точка изгиба в {int}, {int}")
+    public void connectorHasInflectionPoint(String name, int x, int y) throws Exception {
+        userAddsInflectionPoint(name, x, y);
+        assertEquals(201, response.getStatus());
+    }
+
     @Когда("пользователь создаёт диаграмму с набором {string} и схемой {string}")
     public void userCreatesDiagram(String componentSet, String schema) throws Exception {
         send(post("/api/diagram"), new CreateDiagramRequest(componentSet, schema));
@@ -115,6 +122,16 @@ public class DiagramSteps {
     @Когда("пользователь меняет у {string} тип линии на {string}")
     public void userChangesLineType(String name, String lineType) throws Exception {
         changeStyle(name, "lineType", LINE_TYPES.getOrDefault(lineType, lineType));
+    }
+
+    @Когда("пользователь добавляет коннектору {string} точку изгиба в {int}, {int}")
+    public void userAddsInflectionPoint(String name, int x, int y) throws Exception {
+        send(post("/api/diagram/connectors/{id}/points", id(name)), new Point(x, y));
+    }
+
+    @Когда("пользователь переносит точку изгиба {int} коннектора {string} в {int}, {int}")
+    public void userMovesInflectionPoint(int number, String name, int x, int y) throws Exception {
+        send(put("/api/diagram/connectors/{id}/points/{index}", id(name), number - 1), new Point(x, y));
     }
 
     @Тогда("диаграмма открыта в строгом режиме")
@@ -177,6 +194,18 @@ public class DiagramSteps {
         assertEquals(LINE_TYPES.getOrDefault(lineType, lineType), style(name).get("lineType"));
     }
 
+    @Тогда("у коннектора {string} точек изгиба: {int}")
+    public void connectorHasInflectionPoints(String name, int count) throws Exception {
+        assertEquals(count, ((List<?>) connector(name).get("points")).size());
+    }
+
+    @Тогда("точка изгиба {int} коннектора {string} находится в {int}, {int}")
+    public void inflectionPointIsAt(int number, String name, int x, int y) throws Exception {
+        Map<?, ?> point = (Map<?, ?>) ((List<?>) connector(name).get("points")).get(number - 1);
+        assertEquals(x, ((Number) point.get("x")).doubleValue());
+        assertEquals(y, ((Number) point.get("y")).doubleValue());
+    }
+
     @Тогда("редактор отказывает с ошибкой {int}")
     public void editorRejects(int status) throws Exception {
         assertEquals(status, response.getStatus());
@@ -206,6 +235,12 @@ public class DiagramSteps {
 
     private Map<String, Object> block(String name) throws Exception {
         List<Map<String, Object>> found = diagram().read("$.blocks[?(@.id == '" + id(name) + "')]");
+        assertEquals(1, found.size());
+        return found.get(0);
+    }
+
+    private Map<String, Object> connector(String name) throws Exception {
+        List<Map<String, Object>> found = diagram().read("$.connectors[?(@.id == '" + id(name) + "')]");
         assertEquals(1, found.size());
         return found.get(0);
     }
