@@ -43,8 +43,8 @@ backend/src/test/
 2. Whatever the scenarios need to check must be visible in `GET /api/diagram`.
 3. Add `features/ucN_<action>.feature` and only the missing steps in `DiagramSteps`.
 4. If the change breaks scenarios of other use cases, fix them in the same commit.
-5. Scenarios go in a separate commit by the author of the use case: `UC-N: Cucumber scenarios`.
-6. Before merging, merge `main` into the branch and run `gradle test` in `backend/`.
+5. One branch per use case, `feature/uc-N`, with exactly one commit by its author on top of `main`: code and scenarios together. Never base a branch on another use case's branch and never carry another branch's commits.
+6. Before merging, rebase the branch onto the current `main` and run `gradle test` in `backend/`.
 
 ## Constraints
 

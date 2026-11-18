@@ -17,9 +17,6 @@ import ru.nsu.diagrameditor.api.BlockController.AddBlockRequest;
 import ru.nsu.diagrameditor.api.ComponentController.ResizeRequest;
 import ru.nsu.diagrameditor.api.ConnectorController.AddConnectorRequest;
 import ru.nsu.diagrameditor.api.DiagramController.CreateDiagramRequest;
-import ru.nsu.diagrameditor.api.DiagramController.SelectComponentSetRequest;
-import ru.nsu.diagrameditor.api.DiagramController.SelectSchemaRequest;
-import ru.nsu.diagrameditor.api.Point;
 import ru.nsu.diagrameditor.api.PortRef;
 import ru.nsu.diagrameditor.service.DiagramEditor;
 
@@ -29,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -42,12 +38,6 @@ public class DiagramSteps {
             "сплошная", "SOLID",
             "пунктирная", "DASHED",
             "точечная", "DOTTED");
-
-    private static final Map<String, String> SIDES = Map.of(
-            "справа", "RIGHT",
-            "слева", "LEFT",
-            "сверху", "TOP",
-            "снизу", "BOTTOM");
 
     @Autowired
     private MockMvc mvc;
@@ -91,12 +81,6 @@ public class DiagramSteps {
         ids.put(name, JsonPath.read(body(response), "$.id"));
     }
 
-    @Дано("у коннектора {string} есть точка изгиба в {int}, {int}")
-    public void connectorHasInflectionPoint(String name, int x, int y) throws Exception {
-        userAddsInflectionPoint(name, x, y);
-        assertEquals(201, response.getStatus());
-    }
-
     @Когда("пользователь создаёт диаграмму с набором {string} и схемой {string}")
     public void userCreatesDiagram(String componentSet, String schema) throws Exception {
         send(post("/api/diagram"), new CreateDiagramRequest(componentSet, schema));
@@ -118,19 +102,6 @@ public class DiagramSteps {
                 new PortRef(id(source), "RIGHT", 0.5), new PortRef(id(target), "LEFT", 0.5)));
     }
 
-    @Когда("пользователь тянет коннектор {string} от порта {string} блока {string} к порту {string} блока {string}")
-    public void userDragsConnector(String connectorType, String sourceSide, String source,
-                                   String targetSide, String target) throws Exception {
-        send(post("/api/diagram/connectors"), new AddConnectorRequest(connectorType,
-                new PortRef(id(source), SIDES.getOrDefault(sourceSide, sourceSide), 0.5),
-                new PortRef(id(target), SIDES.getOrDefault(targetSide, targetSide), 0.5)));
-    }
-
-    @Когда("пользователь перемещает {string} в точку {int}, {int}")
-    public void userMoves(String name, int x, int y) throws Exception {
-        send(put("/api/diagram/components/{id}/position", id(name)), new Point(x, y));
-    }
-
     @Когда("пользователь задаёт компоненту {string} размер {int} на {int}")
     public void userResizes(String name, int width, int height) throws Exception {
         send(put("/api/diagram/components/{id}/size", id(name)), new ResizeRequest(width, height));
@@ -144,31 +115,6 @@ public class DiagramSteps {
     @Когда("пользователь меняет у {string} тип линии на {string}")
     public void userChangesLineType(String name, String lineType) throws Exception {
         changeStyle(name, "lineType", LINE_TYPES.getOrDefault(lineType, lineType));
-    }
-
-    @Когда("пользователь добавляет коннектору {string} точку изгиба в {int}, {int}")
-    public void userAddsInflectionPoint(String name, int x, int y) throws Exception {
-        send(post("/api/diagram/connectors/{id}/points", id(name)), new Point(x, y));
-    }
-
-    @Когда("пользователь переносит точку изгиба {int} коннектора {string} в {int}, {int}")
-    public void userMovesInflectionPoint(int number, String name, int x, int y) throws Exception {
-        send(put("/api/diagram/connectors/{id}/points/{index}", id(name), number - 1), new Point(x, y));
-    }
-
-    @Когда("пользователь выбирает набор компонентов {string}")
-    public void userSelectsComponentSet(String componentSet) throws Exception {
-        send(put("/api/diagram/component-set"), new SelectComponentSetRequest(componentSet));
-    }
-
-    @Когда("пользователь выбирает схему {string}")
-    public void userSelectsSchema(String schema) throws Exception {
-        send(put("/api/diagram/schema"), new SelectSchemaRequest(schema));
-    }
-
-    @Когда("пользователь отключает схему")
-    public void userRemovesSchema() throws Exception {
-        userSelectsSchema(null);
     }
 
     @Тогда("диаграмма открыта в строгом режиме")
@@ -198,16 +144,6 @@ public class DiagramSteps {
         assertTrue(diagram().read("$.connectors", List.class).isEmpty());
     }
 
-    @Тогда("на диаграмме коннекторов: {int}")
-    public void diagramHasConnectors(int count) throws Exception {
-        assertEquals(count, diagram().read("$.connectors", List.class).size());
-    }
-
-    @Тогда("у блока {string} портов: {int}")
-    public void blockHasPorts(String name, int count) throws Exception {
-        assertEquals(count, ((List<?>) block(name).get("ports")).size());
-    }
-
     @Тогда("на диаграмме коннектор {string} от {string} к {string}")
     public void diagramHasConnector(String connectorType, String source, String target) throws Exception {
         List<Object> found = diagram().read("$.connectors[?(@.type == '" + connectorType + "' && @.source.blockId == '"
@@ -222,13 +158,6 @@ public class DiagramSteps {
         assertEquals(blockType, diagram.read("$.blocks[0].type"));
         assertEquals(x, number(diagram, "$.blocks[0].x"));
         assertEquals(y, number(diagram, "$.blocks[0].y"));
-    }
-
-    @Тогда("блок {string} находится в точке {int}, {int}")
-    public void blockIsAt(String name, int x, int y) throws Exception {
-        Map<String, Object> block = block(name);
-        assertEquals(x, ((Number) block.get("x")).doubleValue());
-        assertEquals(y, ((Number) block.get("y")).doubleValue());
     }
 
     @Тогда("размер блока {string} равен {int} на {int}")
@@ -246,38 +175,6 @@ public class DiagramSteps {
     @Тогда("у {string} тип линии {string}")
     public void componentHasLineType(String name, String lineType) throws Exception {
         assertEquals(LINE_TYPES.getOrDefault(lineType, lineType), style(name).get("lineType"));
-    }
-
-    @Тогда("у коннектора {string} точек изгиба: {int}")
-    public void connectorHasInflectionPoints(String name, int count) throws Exception {
-        assertEquals(count, ((List<?>) connector(name).get("points")).size());
-    }
-
-    @Тогда("точка изгиба {int} коннектора {string} находится в {int}, {int}")
-    public void inflectionPointIsAt(int number, String name, int x, int y) throws Exception {
-        Map<?, ?> point = (Map<?, ?>) ((List<?>) connector(name).get("points")).get(number - 1);
-        assertEquals(x, ((Number) point.get("x")).doubleValue());
-        assertEquals(y, ((Number) point.get("y")).doubleValue());
-    }
-
-    @Тогда("активен набор компонентов {string}")
-    public void componentSetIsActive(String componentSet) throws Exception {
-        assertEquals(componentSet, diagram().read("$.componentSet"));
-    }
-
-    @Тогда("активна схема {string}")
-    public void schemaIsActive(String schema) throws Exception {
-        assertEquals(schema, diagram().read("$.schema"));
-    }
-
-    @Тогда("в палитре есть блок {string}")
-    public void paletteHasBlock(String blockType) throws Exception {
-        assertTrue(diagram().read("$.blockTypes", List.class).contains(blockType));
-    }
-
-    @Тогда("в палитре нет блока {string}")
-    public void paletteHasNoBlock(String blockType) throws Exception {
-        assertFalse(diagram().read("$.blockTypes", List.class).contains(blockType));
     }
 
     @Тогда("редактор отказывает с ошибкой {int}")
@@ -309,12 +206,6 @@ public class DiagramSteps {
 
     private Map<String, Object> block(String name) throws Exception {
         List<Map<String, Object>> found = diagram().read("$.blocks[?(@.id == '" + id(name) + "')]");
-        assertEquals(1, found.size());
-        return found.get(0);
-    }
-
-    private Map<String, Object> connector(String name) throws Exception {
-        List<Map<String, Object>> found = diagram().read("$.connectors[?(@.id == '" + id(name) + "')]");
         assertEquals(1, found.size());
         return found.get(0);
     }
