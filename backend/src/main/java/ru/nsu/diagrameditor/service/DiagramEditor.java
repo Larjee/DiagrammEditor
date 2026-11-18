@@ -12,6 +12,7 @@ import ru.nsu.diagrameditor.model.Port;
 import ru.nsu.diagrameditor.model.Schema;
 import ru.nsu.diagrameditor.model.Style;
 import ru.nsu.diagrameditor.repository.ResourceRepository;
+import ru.nsu.diagrameditor.storage.DiagramStorage;
 
 import java.util.List;
 
@@ -20,11 +21,13 @@ public class DiagramEditor {
 
     private final ResourceRepository resources;
     private final SchemaValidator validator;
+    private final DiagramStorage storage;
     private Diagram diagram;
 
-    public DiagramEditor(ResourceRepository resources, SchemaValidator validator) {
+    public DiagramEditor(ResourceRepository resources, SchemaValidator validator, DiagramStorage storage) {
         this.resources = resources;
         this.validator = validator;
+        this.storage = storage;
     }
 
     public Diagram createDiagram(String componentSetName, String schemaName) {
@@ -43,6 +46,16 @@ public class DiagramEditor {
         Block block = new Block(blockType, x, y, diagram.getComponentSet().getDefaultStyle(blockType));
         diagram.addComponent(block);
         return block;
+    }
+
+    public Diagram openDiagram(String path) {
+        if (path == null) {
+            throw new InvalidRequestException("Choose a file to open");
+        }
+        Diagram opened = storage.load(path);
+        opened.setFilePath(path);
+        diagram = opened;
+        return diagram;
     }
 
     public Diagram setComponentSet(String componentSetName) {

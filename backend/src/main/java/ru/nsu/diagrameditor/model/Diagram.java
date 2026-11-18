@@ -13,6 +13,11 @@ public class Diagram {
     private EditMode mode;
 
     public Diagram(ComponentSet componentSet, Schema schema) {
+        this(null, componentSet, schema);
+    }
+
+    public Diagram(String name, ComponentSet componentSet, Schema schema) {
+        this.name = name;
         this.componentSet = componentSet;
         setSchema(schema);
     }
