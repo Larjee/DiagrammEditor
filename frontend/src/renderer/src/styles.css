@@ -1,0 +1,58 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
+
+.main-window {
+  display: grid;
+  grid-template-columns: 200px 1fr 240px;
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas:
+    'toolbar toolbar toolbar'
+    'error error error'
+    'palette canvas style';
+  height: 100%;
+}
+
+.toolbar {
+  grid-area: toolbar;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.error {
+  grid-area: error;
+  padding: 8px 12px;
+  background: #fdecea;
+  color: #a61b1b;
+}
+
+.palette {
+  grid-area: palette;
+  padding: 8px 12px;
+  border-right: 1px solid #ddd;
+  overflow: auto;
+}
+
+.canvas {
+  grid-area: canvas;
+  min-height: 0;
+}
+
+.canvas.empty {
+  display: grid;
+  place-items: center;
+  color: #888;
+}
+
+.style-panel {
+  grid-area: style;
+  padding: 8px 12px;
+  border-left: 1px solid #ddd;
+}
