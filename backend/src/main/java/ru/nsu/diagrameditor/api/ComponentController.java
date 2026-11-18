@@ -25,12 +25,6 @@ public class ComponentController {
         this.editor = editor;
     }
 
-    @PutMapping("/position")
-    public BlockResponse move(@PathVariable String id, @RequestBody Point position) {
-        Block block = editor.moveComponent(id, position.x(), position.y());
-        return BlockResponse.from(block);
-    }
-
     @PutMapping("/size")
     public BlockResponse resize(@PathVariable String id, @RequestBody ResizeRequest request) {
         Block block = editor.resizeComponent(id, request.width(), request.height());
