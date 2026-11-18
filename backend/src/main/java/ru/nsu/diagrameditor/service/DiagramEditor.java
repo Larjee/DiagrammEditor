@@ -72,6 +72,14 @@ public class DiagramEditor {
         return diagram;
     }
 
+    public void deleteDiagram() {
+        Diagram diagram = getDiagram();
+        if (diagram.getFilePath() != null) {
+            storage.delete(diagram.getFilePath());
+        }
+        this.diagram = null;
+    }
+
     public Diagram setComponentSet(String componentSetName) {
         Diagram diagram = getDiagram();
         diagram.setComponentSet(loadComponentSet(componentSetName));

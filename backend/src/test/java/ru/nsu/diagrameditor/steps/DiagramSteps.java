@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -206,6 +207,11 @@ public class DiagramSteps {
         send(post("/api/diagram/save"), new SaveDiagramRequest(null, false));
     }
 
+    @Когда("пользователь удаляет диаграмму")
+    public void userDeletesDiagram() throws Exception {
+        response = mvc.perform(delete("/api/diagram")).andReturn().getResponse();
+    }
+
     @Когда("пользователь выбирает набор компонентов {string}")
     public void userSelectsComponentSet(String componentSet) throws Exception {
         send(put("/api/diagram/component-set"), new SelectComponentSetRequest(componentSet));
@@ -325,6 +331,11 @@ public class DiagramSteps {
     @Тогда("в файле {string} блоков: {int}")
     public void fileHasBlocks(String name, int count) throws Exception {
         assertEquals(count, JsonPath.parse(file(name).toFile()).read("$.blocks", List.class).size());
+    }
+
+    @Тогда("файла {string} нет")
+    public void fileIsMissing(String name) {
+        assertFalse(Files.exists(file(name)));
     }
 
     @Тогда("файл {string} содержит {string}")

@@ -9,4 +9,6 @@ public interface DiagramStorage {
     boolean exists(String path);
 
     void save(Diagram diagram, String path);
+
+    void delete(String path);
 }
