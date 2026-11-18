@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Repository
@@ -50,6 +51,50 @@ public class JsonDiagramStorage implements DiagramStorage {
         } catch (NullPointerException | IllegalArgumentException e) {
             throw invalidFormat(path);
         }
+    }
+
+    @Override
+    public boolean exists(String path) {
+        return Files.exists(Path.of(path));
+    }
+
+    @Override
+    public void save(Diagram diagram, String path) {
+        try {
+            mapper.writerWithDefaultPrettyPrinter().writeValue(Path.of(path).toFile(), toFile(diagram));
+        } catch (IOException e) {
+            throw new DiagramFileException("Cannot write to '" + path + "'");
+        }
+    }
+
+    private static DiagramFile toFile(Diagram diagram) {
+        List<DiagramFile.BlockData> blocks = diagram.getComponents().stream()
+                .filter(Block.class::isInstance)
+                .map(Block.class::cast)
+                .map(block -> new DiagramFile.BlockData(block.getId(), block.getType(), block.getX(), block.getY(),
+                        block.getWidth(), block.getHeight(), block.getLabel(),
+                        block.getPorts().stream()
+                                .map(port -> new DiagramFile.PortData(port.getSide(), port.getOffset()))
+                                .toList(),
+                        DiagramFile.StyleData.from(block.getStyle())))
+                .toList();
+        List<DiagramFile.ConnectorData> connectors = diagram.getComponents().stream()
+                .filter(Connector.class::isInstance)
+                .map(Connector.class::cast)
+                .map(connector -> new DiagramFile.ConnectorData(connector.getType(),
+                        end(connector.getSource()), end(connector.getTarget()),
+                        connector.getInflectionPoints().stream()
+                                .map(point -> new DiagramFile.PointData(point.getX(), point.getY()))
+                                .toList(),
+                        DiagramFile.StyleData.from(connector.getStyle())))
+                .toList();
+        String schema = diagram.getSchema() == null ? null : diagram.getSchema().getName();
+        return new DiagramFile(DiagramFile.FORMAT_VERSION, diagram.getName(), diagram.getComponentSet().getName(),
+                schema, blocks, connectors);
+    }
+
+    private static DiagramFile.EndData end(Port port) {
+        return new DiagramFile.EndData(port.getOwner().getId(), port.getSide(), port.getOffset());
     }
 
     private Diagram toDiagram(DiagramFile data) {

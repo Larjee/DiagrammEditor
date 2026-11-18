@@ -56,6 +56,15 @@ public record DiagramFile(
             int fontSize,
             LineType lineType
     ) {
+        static StyleData from(Style style) {
+            return new StyleData(hex(style.borderColor()), style.borderWidth(), hex(style.backgroundColor()),
+                    style.font().getName(), style.font().getSize(), style.lineType());
+        }
+
+        private static String hex(Color color) {
+            return String.format("#%06x", color.getRGB() & 0xffffff);
+        }
+
         Style toStyle() {
             return new Style(Color.decode(borderColor), borderWidth, Color.decode(backgroundColor),
                     new Font(font, Font.PLAIN, fontSize), lineType);
