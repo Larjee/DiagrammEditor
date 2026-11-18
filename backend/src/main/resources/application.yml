@@ -5,3 +5,7 @@ server:
 spring:
   application:
     name: diagram-editor
+
+editor:
+  cors:
+    allowed-origins: "app://*,http://localhost:[*],http://127.0.0.1:[*]"
