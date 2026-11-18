@@ -7,5 +7,6 @@ spring:
     name: diagram-editor
 
 editor:
+  data-dir: ${user.home}/DiagramEditor
   cors:
     allowed-origins: "app://*,http://localhost:[*],http://127.0.0.1:[*]"
