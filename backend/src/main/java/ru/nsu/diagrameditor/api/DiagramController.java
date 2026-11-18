@@ -58,6 +58,11 @@ public class DiagramController {
         return DiagramResponse.from(editor.openDiagram(request.path()));
     }
 
+    @PostMapping("/diagram/save")
+    public DiagramResponse saveDiagram(@RequestBody SaveDiagramRequest request) {
+        return DiagramResponse.from(editor.saveDiagram(request.path(), request.overwrite()));
+    }
+
     @PutMapping("/diagram/component-set")
     public DiagramResponse selectComponentSet(@RequestBody SelectComponentSetRequest request) {
         return DiagramResponse.from(editor.setComponentSet(request.componentSet()));
@@ -72,6 +77,9 @@ public class DiagramController {
     }
 
     public record OpenDiagramRequest(String path) {
+    }
+
+    public record SaveDiagramRequest(String path, boolean overwrite) {
     }
 
     public record SelectComponentSetRequest(String componentSet) {
