@@ -1,20 +1,37 @@
 import type { Diagram } from '../api/types'
 
-export function ComponentPalette({ diagram }: { diagram: Diagram | null }) {
+interface Props {
+  diagram: Diagram | null
+}
+
+export function ComponentPalette({
+  diagram,
+}: Props) {
   return (
     <aside className="palette">
-      <h3>Blocks</h3>
-      <ul>
-        {diagram?.blockTypes.map((type) => (
-          <li key={type}>{type}</li>
-        ))}
-      </ul>
-      <h3>Connectors</h3>
-      <ul>
-        {diagram?.connectorTypes.map((type) => (
-          <li key={type}>{type}</li>
-        ))}
-      </ul>
+      <h2>Components</h2>
+      {diagram && <>
+        <h3>Blocks</h3>
+        <ul>
+          {diagram.blockTypes.map((type) => (
+            <li key={type}>
+              <span>{label(type)}</span>
+            </li>
+          ))}
+        </ul>
+        <h3>Connectors</h3>
+        <ul>
+          {diagram.connectorTypes.map((type) => (
+            <li key={type}>
+              <span>{label(type)}</span>
+            </li>
+          ))}
+        </ul>
+      </>}
     </aside>
   )
+}
+
+export function label(type: string) {
+  return type.charAt(0).toUpperCase() + type.slice(1)
 }
