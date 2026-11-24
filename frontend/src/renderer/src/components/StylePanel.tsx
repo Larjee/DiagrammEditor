@@ -1,8 +1,7 @@
+
 export function StylePanel() {
-  return (
-    <aside className="style-panel">
-      <h3>Style</h3>
-      <p>Select a component</p>
-    </aside>
-  )
+  return <aside className="style-panel">
+    <h2>Properties</h2>
+    <p className="muted">Select a component</p>
+  </aside>
 }
