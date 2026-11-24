@@ -1,37 +1,99 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api, ApiError } from '../api/client'
 import type { Diagram } from '../api/types'
 import { ComponentPalette } from './ComponentPalette'
 import { DiagramCanvas } from './DiagramCanvas'
 import { StylePanel } from './StylePanel'
+import { NewDiagramDialog } from './NewDiagramDialog'
 
 export function MainWindow() {
   const [diagram, setDiagram] = useState<Diagram | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(true)
+  const pending = useRef(true)
+  const [documentVersion, setDocumentVersion] = useState(0)
+  const [showNew, setShowNew] = useState(false)
 
   useEffect(() => {
-    api.diagram().then(setDiagram, (e: unknown) => {
-      if (!(e instanceof ApiError && e.status === 409)) {
-        setError(e instanceof Error ? e.message : String(e))
+    let active = true
+    api.diagram().then(
+      (value) => { if (active) setDiagram(value) },
+      (cause: unknown) => {
+        if (active && !(cause instanceof ApiError && cause.status === 409)) {
+          setError(message(cause))
+        }
+      }
+    ).finally(() => {
+      if (active) {
+        pending.current = false
+        setBusy(false)
       }
     })
+    return () => { active = false }
   }, [])
+
+  async function change(operation: () => Promise<Diagram | null>, newDocument = false) {
+    if (pending.current) return false
+    pending.current = true
+    setBusy(true)
+    setError(null)
+    try {
+      const value = await operation()
+      if (!value) return false
+      setDiagram(value)
+      if (newDocument) {
+        setDocumentVersion((version) => version + 1)
+      }
+      return true
+    } catch (cause) {
+      setError(message(cause))
+      return false
+    } finally {
+      pending.current = false
+      setBusy(false)
+    }
+  }
 
   return (
     <div className="main-window">
       <header className="toolbar">
-        <strong>Diagram Editor</strong>
-        {diagram && (
-          <span>
-            {diagram.componentSet} · {diagram.schema ?? 'no schema'} ·{' '}
-            {diagram.mode === 'STRICT' ? 'strict mode' : 'free mode'}
-          </span>
-        )}
+        <button type="button" disabled={busy} onClick={() => { setError(null); setShowNew(true) }}>
+          New
+        </button>
       </header>
-      {error && <div className="error">{error}</div>}
-      <ComponentPalette diagram={diagram} />
-      <DiagramCanvas diagram={diagram} />
-      <StylePanel />
+      {error && <div className="error" role="alert">
+        <span>{error}</span>
+        <button type="button" aria-label="Dismiss error" onClick={() => setError(null)}>×</button>
+      </div>}
+      <ComponentPalette diagram={diagram}
+      />
+      <DiagramCanvas diagram={diagram}
+        key={documentVersion}
+      />
+      <StylePanel
+      />
+      <footer className="status-bar">
+        {diagram ? <>
+          <span>Mode: {diagram.mode === 'STRICT' ? 'Strict' : 'Free'}</span>
+          <span>Schema: {diagram.schema ?? 'None'}</span>
+          <span>Set: {diagram.componentSet}</span>
+          <span title={diagram.filePath ?? undefined}>
+            {diagram.name ?? diagram.filePath?.split(/[\\/]/).pop() ?? 'Untitled diagram'}
+          </span>
+        </> : <span>{busy ? 'Loading…' : 'No diagram is open'}</span>}
+      </footer>
+      {showNew && <NewDiagramDialog
+        busy={busy}
+        error={error}
+        onClose={() => { setShowNew(false); setError(null) }}
+        onCreate={async (componentSet, schema) => {
+          if (await change(() => api.createDiagram(componentSet, schema), true)) setShowNew(false)
+        }}
+      />}
     </div>
   )
+}
+
+function message(cause: unknown) {
+  return cause instanceof Error ? cause.message : String(cause)
 }
