@@ -3,6 +3,7 @@ import { spawn, type ChildProcess } from 'node:child_process'
 import { createServer } from 'node:net'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { connectorRoutes } from './connectorRoutes'
 
 const JSON_FILES = [{ name: 'Diagrams', extensions: ['json'] }]
 
@@ -39,6 +40,7 @@ function createWindow(): void {
 }
 
 function registerIpc(): void {
+  ipcMain.handle('diagram:route-connectors', (_event, blocks, connectors) => connectorRoutes(blocks, connectors))
   ipcMain.handle('backend:url', () => backendUrl)
   ipcMain.handle('dialog:open', async () => {
     const result = await dialog.showOpenDialog({ filters: JSON_FILES, properties: ['openFile'] })
